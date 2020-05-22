@@ -1,0 +1,31 @@
+substitutions:
+  _FEDORA_VERSION: "32"
+  _ARTIFACT_BUCKET: "bcows-fedora-rpms"
+
+steps:
+# clone the script repository
+- name: gcr.io/cloud-builders/git
+  args:
+  - clone
+  - https://github.com/DarkWav/Minecraft-Installer-RPM.git
+# using fedora container, create rpmbuild environment and execute the cloned script from repository
+- name: fedora:$_FEDORA_VERSION
+  dir: Minecraft-Installer-RPM
+  entrypoint: bash
+  args:
+  - -c
+  - |
+    dnf -y install rpm-build wget bsdtar bash --refresh
+    sed -i 's/read /#read /g' minecraft-installer.sh
+    sed -i 's/sudo /#sudo /g' minecraft-installer.sh
+    bash minecraft-installer.sh
+    cp minecraft-installer/*.rpm /workspace
+
+# publish the RPM artifact to a bucket
+artifacts:
+  objects:
+    location: 'gs://$_ARTIFACT_BUCKET/$_FEDORA_VERSION/'
+    paths:
+    - "*.rpm"
+
+# eof

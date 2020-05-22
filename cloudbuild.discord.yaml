@@ -1,0 +1,32 @@
+substitutions:
+  _FEDORA_VERSION: "32"
+  _ARTIFACT_BUCKET: "bcows-fedora-rpms"
+  _DISCORD_VERSION: stable
+
+steps:
+# clone the script repository
+- name: gcr.io/cloud-builders/git
+  args:
+  - clone
+  - https://github.com/RPM-Outpost/discord.git
+# using fedora container, create rpmbuild environment and execute the cloned script from repository
+- name: fedora:$_FEDORA_VERSION
+  dir: discord
+  entrypoint: bash
+  args:
+  - -c
+  - |
+    dnf -y install rpmdevtools wget --refresh
+    useradd build
+    chown -R build.root /workspace/discord/
+    su -c "cd /workspace/discord/ && ./create-package.sh $_DISCORD_VERSION" - build
+    cp RPMs/x86_64/*.rpm /workspace
+
+# publish the RPM artifact to a bucket
+artifacts:
+  objects:
+    location: 'gs://$_ARTIFACT_BUCKET/$_FEDORA_VERSION/'
+    paths:
+    - "*.rpm"
+
+# eof
