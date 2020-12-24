@@ -1,5 +1,5 @@
 substitutions:
-  _FEDORA_VERSION: "32"
+  _FEDORA_VERSION: "33"
   _ARTIFACT_BUCKET: "bcows-fedora-rpms"
   _DISCORD_VERSION: stable
 
